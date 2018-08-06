@@ -157,7 +157,7 @@ class regress :
 #         self.dm=X
         return X
             
-    def multivar_regress(self, Y, predef_var='', list_variates=[]) :
+    def multivar_regress(self, Y, predef_var='', list_variates=[], annsig=False) :
         """
         The method is the multi-variate-regression that simultaniously fit 
         multiple variates (x1,x2,....) in one single regression to derive
@@ -279,6 +279,8 @@ class regress :
         #-- output the design matrix in the form of list_variates
         if list_variates == []:
             list_variates = [X[:,i] for i in range(X.shape[1])] 
+            
+
             
         return {'beta':beta[:,0],'se':se,'rmse':rmse,
                   'model':Yreg[:,0],'list_variates':list_variates}
