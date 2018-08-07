@@ -10,90 +10,95 @@ class feature:
     """  
     
     
-    def amp_phase(self, ampcos, ampsin, omega, ampcos_error=-1 ,ampsin_error=-1):
+    def amp_phase(self, ampcos, ampsin, omega, error=False ,ampcos_error=-1, ampsin_error=-1):
         """
         The method calculate the amplitude and phase (maximum value of the sinusoidal signal)
         
         Parameters:
-            ampcos : np.float,
+            ampcos : np.array (float),
                 regression coeffcient for the cosine wave
                 
-            ampsin : np.float,
+            ampsin : np.array (float),
                 regression coeffcient for the sine wave 
                 
             omega : np.float,
                 phase speed (omega) of the cos & sin wave  
                 ex: annual sin/cos wave of np.cos(year*2.*np.pi) would have a omega = 2*np.pi
                 
-            ampcos_error : np.float, optional (kwarg)
+            error : boolean,
+                If set to True, kwarg in the following (ampcos_error and ampsin_error) need to be specified
+                
+            ampcos_error : np.array (float), optional (kwarg)
                 starndard error of the regression coeffcient for the cosine wave
                 
-            ampsin_error : np.float, optional (kwarg)
+            ampsin_error : np.array (float), optional (kwarg)
                 starndard error of the regression coeffcient for the sine wave 
                 
         Returns:
             amp : np.float
                 amplitude of the sinusoidal wave
             phase : np.float
-                phase (max value) in time of the sinusoidal wave 
+                phase (max value) in time of the sinusoidal wave (unit: 1 per cycle)
             amperr : np.float, output 0 if any of the kwarg is not given 
                 standard error of the amplitude of the sinusoidal wave
             phaseerr : np.float, output 0 if any of the kwarg is not given 
                 standard error of the phase (max value) in time of the sinusoidal wave 
+                
+                
+        Mathematic basis:
+        
+        assuming 
+        amp=sqrt(ampcos^2+ampsin^2)
+        
+        ampcos x cos(wt) + ampsin x sin(wt)
+         = amp x (ampcos/amp x cos(wt) + ampsin/amp x sin(wt))
+         = amp x cos(wt-phi)
+         
+        where 
+        cos(phi)=ampcos/amp 
+        sin(phi)=ampsin/amp 
             
+        tan(phi)=ampsin/ampcos
+        phi=arctan(ampsin/ampcos) 
+        
+        max (amp x cos(wt-phi)) = amp 
+        when wt-phi = 0 => wt = phi 
+        
+        NOTICE arctan strictly confine the phi to only range from -pi/2 to pi/2
+        but phi should range from 0 to 2*pi. Meaning some of the phi solution is 
+        misinterpreted in the range of -pi/2 to pi/2 while it is actually phi+pi
+        Therefore, we need ampcos/amp to help determining the real position of phi
+        => when cos(phi)=ampcos/amp > 0  the phi in range -pi/2 to pi/2 
+           when cos(phi)=ampcos/amp < 0  the phi in range pi/2 to 3pi/2 (arctan solution + pi)
+           also 
+           when cos(phi)=ampcos/amp > 0 & phi < 0 need to be corrected to phi+2pi 
+           to avoid negative phi value
+          
                 
         """
         amp = np.sqrt(ampcos**2 + ampsin**2)
-        phi = np.arctan(ampcos/ampsin)
-        phase = (np.pi/2-phi)/omega
+        phi = np.arctan(ampsin/ampcos)
+        phi[np.where(ampcos < 0)] = phi[np.where(ampcos < 0)]+np.pi
+        phi[np.where(phi < 0.)] = phi[np.where(phi < 0.)]+np.pi*2.  
+        phase = phi/omega       # unit time per cycle
         
-        if ampcos_error > 0 and ampcos_error > 0:
+        if error :
             amp_error = np.sqrt(ampcos_error**2 + ampsin_error**2)
-            phi_error = np.arctan(ampcos_error/ampsin_error)
-            phase_error = (np.pi/2-phi_error)/omega
-        else :
-            amp_error = 0.
-            phase_error = 0.
-            
-            
-        return {'amp':amp, 'phase':phase, 'amperr':amp_error, 'phaseerr':phase_error}
-        
-        
-        
-        
-        
+            term1 = 1/(1+ampsin**2/ampcos**2)*(1/ampcos)*ampsin_error
+            term2 = 1/(1+ampsin**2/ampcos**2)*(-ampsin/ampcos**2)*ampcos_error
+            phi_error = np.sqrt(term1**2+term2**2) 
+            phase_error = phi_error/omega
 
-
-
-
-
+            return {'amp':amp, 'phase':phase, 'amperr':amp_error, 'phaseerr':phase_error}
+        else:
+            return {'amp':amp, 'phase':phase}
         
-    """
-    The method calculates the sinusoidal phase and total amplitude.
-    It also calculate the corresponding error if the error is given
+        
+        
+        
     
     
-      for finding the error in annual phase, 
-        1. calculate the annual signal (Ann)
-        2. calculate two types of possible error (Err) : A*cos+B*sin or A*cos-B*sin (A, B are error in cos sin amplitude)
-        3. combine annual signal with two types of error, each type has two combination Ann+Err or Ann-Err, therefore, there are total four types of possible changes
-   
-    Input:
-    amplitude of cosine   : ampcos   (matrix)
-    amplitude of sine     : ampsin   (matrix)
-    uncertainty of ampcos : ampcos_error  (matrix) optional
-    uncertainty of ampsin : ampsin_error  (matrix) optional
-   
-    Output: 
-    phase       : 'phase'       (matrix)  unit day
-    phase error : 'phase error' (matrix)  unit days of uncertainty
-      if the uncertainty of ampcos or ampsin is not assigned the output would be nan
-
-   
-     """    
-    
-    
-    def annual_phase(ampcos,ampsin,ampcos_error=-1 ,ampsin_error=-1):
+def annual_phase(ampcos,ampsin,ampcos_error=-1 ,ampsin_error=-1):
  
     # initialize
     ori_shape=ampcos.shape                           # original dimension
@@ -158,3 +163,5 @@ class feature:
 
     else: 
        phase_error=np.float('nan')           
+    
+    return{'phase':phase,'phase error':phase_error}
