@@ -8,7 +8,8 @@ class feature:
     Calculate the feature of the sinusoidal signal
 
     """  
-    
+    def __init__(self) :
+        return   
     
     def amp_phase(self, ampcos, ampsin, omega, error=False ,ampcos_error=-1, ampsin_error=-1):
         """
@@ -96,8 +97,26 @@ class feature:
         
         
         
-    
-    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+#   the same as the module.phase code (pasted here just for testing comparison)    
+
 def annual_phase(ampcos,ampsin,ampcos_error=-1 ,ampsin_error=-1):
  
     # initialize
