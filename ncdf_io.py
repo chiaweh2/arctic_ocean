@@ -140,8 +140,10 @@ class ncdf_io :
                     #var_dict[varname[i]]=np.transpose(var_dict[varname[i]],indexorder)
                     if self.verbose > 0:
                         print varname[i],var_dict[varname[i]].shape
-                        print "    dim:",[dimname[ind] for ind in indexorder]
-
+                        print "    dim in set/default order:"
+                        newdim=[dimname[ind] for ind in indexorder]
+                        print "    ",newdim  
+                        
             # output varname listed in var
             else :
                 # exclude dimension and only include varname in the list
@@ -150,7 +152,9 @@ class ncdf_io :
                     #var_dict[varname[i]] = np.transpose( var_dict[varname[i]],indexorder )
                     if self.verbose > 0:
                         print varname[i],var_dict[varname[i]].shape
-                        print "    dim:",[dimname[ind] for ind in indexorder]
+                        print "    dim in set/default order:"
+                        newdim=[dimname[ind] for ind in indexorder]
+                        print "    ",newdim
 
         return dim_dict, var_dict
 
@@ -165,10 +169,9 @@ class ncdf_io :
                 file name and path to the file
 
         Returns:
-            dim_dict : 
-                contain all dimensions in the ncfile
-            var_dict : 
-                contain all variables (or listed variable) in the ncfile
+            ds : xarray.Dataset
+                xarray.Dataset includes all variable in the netcdf file 
+                if varname is not set.
             
         kwargs:
             var : list of strings, optional
