@@ -3,6 +3,7 @@
 import numpy as np
 import datetime
 import pandas as pd
+import xarray as xr
 
 class time_convert:
     """
@@ -128,8 +129,7 @@ class time_convert:
         return yeardate
     
     
-
-def tarray_month(itime,ftime):
+def create_tarray_month(itime,ftime):
     """
     Parameters:
         itime: list 
@@ -155,6 +155,35 @@ def tarray_month(itime,ftime):
     return time
 
 
+def convert_ds_gmonth_tarray(ds, offset=1):
+    """
+    convert the old gmonth value in netcdf file
+    to the new time stamp with datetime format
     
+    Parameter :
+        ds : xarray.Dataset
+            xarray.Dataset from the netcdf file
+        offset : int, kwarg
+            determine the offset of the original gmonth stored in the netcdf file
+            sometime it is 1 month smaller than the actuall GRACE month earlier 
+            output settng. In this case, set the offset to +1 
+    return : ds
+    
+    
+    """
+    # old time stamp (change from np.array to pd.index)
+    gmonth=np.array(ds['time'])+offset   # start from 0 
+    tdict=time_convert(gmonth).gmonth2year_mon()
+    year=tdict['year']
+    month=tdict['month']
+    tstamp=pd.to_datetime([datetime.datetime(year[ii],month[ii],15) for ii in range(len(year))])
+
+    # assign new time stamp
+    ds['time']=xr.DataArray(tstamp,coords=[tstamp],dims=['time'])
+    
+    return ds
+    
+    
+  
     
     
