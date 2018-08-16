@@ -16,6 +16,12 @@ from distribution import ci2nstd
 from time_convert import convert_ds_gmonth_tarray
 
 
+"""
+Make sure to have the JPL mascon ocean file (run the JPL processing first if the file does not exist) 
+before running this script
+
+"""
+
 
 # input file
 dir3='/Users/joedhsu/Research/Rsync/Data_p/GRACE05_CSR/004_154/Global/'
@@ -36,18 +42,22 @@ ds_slf=convert_ds_gmonth_tarray(ds_slf, offset=1)
 #                 method='nearest').plot.contourf(col='time',col_wrap=3,levels=np.linspace(-1,1,10))
 
 # output dataset
-ds_slf.to_netcdf('./data/slf.global.4-154.nc')
-
+ds_slf.to_netcdf('./data/slf.nc')
+ds_new=xr.open_dataset('./data/jpl_mascon_ocean.nc')
 
 
 # interpolation
-ds_slf_interp=ds_slf.interp(coords={'lon':ds_new.lon,'lat':ds_new.lat},method='linear')
+#  kwargs set to fill_value= None is forcing the function to 
+#  extrapolate the value where indicated location of interpolation 
+#  is out of the original data
+ds_slf_interp=ds_slf.interp(coords={'lon':ds_new.lon,'lat':ds_new.lat}
+                            ,method='linear',kwargs={'fill_value':None}) 
 
 # slf correction in obp
 ds_corr=ds_new-ds_slf_interp
 
 # output dataset
-ds_corr.to_netcdf('./data/jpl-slf.4-154_only.nc')
+ds_corr.to_netcdf('./data/jpl_mascon_ocean-slf.nc')
 
 
 # perform regression
@@ -100,15 +110,15 @@ dict2=annsig.amp_phase(ds_corr_beta['beta'].sel(reg_variate='anncos').values,
 
 
 # ds_ann=xr.Dataset()
-ds_corr_beta['annamp']=xr.DataArray(dict2['amp'], coords=[ds_corr_beta['z'].lat,ds_corr_beta['z'].lon],
+ds_corr_beta['annamp']=xr.DataArray(dict2['amp'], coords=[ds_corr['z'].lat,ds_corr['z'].lon],
                              dims=['lat','lon'])
-ds_corr_beta['annphase']=xr.DataArray(dict2['phase'], coords=[ds_corr_beta['z'].lat,ds_corr_beta['z'].lon],
+ds_corr_beta['annphase']=xr.DataArray(dict2['phase'], coords=[ds_corr['z'].lat,ds_corr['z'].lon],
                              dims=['lat','lon'])
-ds_corr_beta['annamperr']=xr.DataArray(dict2['amperr'], coords=[ds_corr_beta['z'].lat,ds_corr_beta['z'].lon],
+ds_corr_beta['annamperr']=xr.DataArray(dict2['amperr'], coords=[ds_corr['z'].lat,ds_corr['z'].lon],
                              dims=['lat','lon'])
-ds_corr_beta['annphaseerr']=xr.DataArray(dict2['phaseerr'],coords=[ds_corr_beta['z'].lat,ds_corr_beta['z'].lon],
+ds_corr_beta['annphaseerr']=xr.DataArray(dict2['phaseerr'], coords=[ds_corr['z'].lat,ds_corr['z'].lon],
                              dims=['lat','lon'])
 
 
 # regression dataset
-ds_corr_beta.to_netcdf('./data/jpl_mascon_ocean_reg.nc')
+ds_corr_beta.to_netcdf('./data/jpl_mascon_ocean-slf.reg.nc')
