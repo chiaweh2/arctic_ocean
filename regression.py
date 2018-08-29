@@ -186,11 +186,14 @@ class regress :
 
 
          Returns:
+         
+            Dictionary : {'beta':beta[:,0],'se':se,'rmse':rmse,
+                  'model':Yreg[:,0],'list_variates':list_variates}
             beta: 
                 the coefficients (dim = num of variates) that relate to each variate
                 It's order is following the order of variates in the list_variates
-            err: 
-                the errors that makes the linear combined regression value to deviate 
+            se: 
+                the standard errors that makes the linear combined regression value to deviate 
                 from the original data (Y)
         
                                  / beta0 \          / e1 \
@@ -199,6 +202,14 @@ class regress :
                           beta = |   .   |    err = |  . |
                                  |   .   |          |  . |
                                  \ betan /          \ ep /
+                                 
+            rmse: the difference between the model and the data
+            
+            model: the model created from the regression
+            
+            list_variates: variates used for the regression if one use the predef_var
+                options. The list contains all variates used in the regression as nested
+                list. 
                                  
         
          Mathematical expression:
